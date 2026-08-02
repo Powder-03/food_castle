@@ -26,3 +26,8 @@ class MenuRepository(BaseRepository[MenuItem]):
         stmt = select(MenuItem).filter(MenuItem.id.in_(ids))
         result = await self.db.execute(stmt)
         return list(result.scalars().all())
+
+    async def get_categories(self) -> List[str]:
+        stmt = select(MenuItem.category).distinct().order_by(MenuItem.category)
+        result = await self.db.execute(stmt)
+        return [r for r in result.scalars().all() if r]

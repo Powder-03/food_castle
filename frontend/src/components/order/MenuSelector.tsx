@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { MenuItem, PortionSize } from '@/lib/types'
+import { DEFAULT_CATEGORIES } from '@/components/menu/MenuItemModal'
 import { Input } from '@/components/ui/Input'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
@@ -12,12 +13,14 @@ interface MenuSelectorProps {
   onAddItem: (item: MenuItem, portion: PortionSize) => void
 }
 
-const CATEGORIES = ['All', 'Beverages', 'Mains', 'Snacks', 'Desserts']
-
 export const MenuSelector: React.FC<MenuSelectorProps> = ({ items, onAddItem }) => {
   const [search, setSearch] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [itemForPortionPicker, setItemForPortionPicker] = useState<MenuItem | null>(null)
+
+  // Dynamically combine default categories with any custom item categories present in items
+  const itemCategories = items.map((i) => i.category)
+  const dynamicCategories = ['All', ...Array.from(new Set([...DEFAULT_CATEGORIES, ...itemCategories]))]
 
   const filteredItems = items.filter((item) => {
     const matchesSearch = item.name.toLowerCase().includes(search.toLowerCase())
@@ -45,7 +48,7 @@ export const MenuSelector: React.FC<MenuSelectorProps> = ({ items, onAddItem }) 
 
       {/* Category Pills */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-        {CATEGORIES.map((cat) => (
+        {dynamicCategories.map((cat) => (
           <button
             key={cat}
             onClick={() => setSelectedCategory(cat)}

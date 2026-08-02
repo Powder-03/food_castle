@@ -1,5 +1,5 @@
 import React from 'react'
-import { Order } from '@/lib/types'
+import { Order, OrderItem } from '@/lib/types'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
@@ -65,7 +65,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({
 
       {/* Item List */}
       <div className="space-y-2 py-1">
-        {order.items.map((item) => (
+        {order.items.map((item: OrderItem) => (
           <div
             key={item.id}
             className="flex items-center justify-between text-sm py-1 border-b border-stone-100 last:border-0"

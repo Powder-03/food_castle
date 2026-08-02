@@ -1,21 +1,13 @@
 import React, { useEffect, useState } from 'react'
 import { MenuItem } from '@/lib/types'
 import { MenuItemCard } from '@/components/menu/MenuItemCard'
-import { MenuItemModal } from '@/components/menu/MenuItemModal'
+import { MenuItemModal, DEFAULT_CATEGORIES } from '@/components/menu/MenuItemModal'
 import { Button } from '@/components/ui/Button'
 import { Select } from '@/components/ui/Select'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Plus, UtensilsCrossed } from 'lucide-react'
 import api from '@/lib/api'
-
-const CATEGORY_OPTIONS = [
-  { label: 'All Categories', value: '' },
-  { label: 'Beverages', value: 'Beverages' },
-  { label: 'Mains', value: 'Mains' },
-  { label: 'Snacks', value: 'Snacks' },
-  { label: 'Desserts', value: 'Desserts' },
-]
 
 const AVAILABILITY_OPTIONS = [
   { label: 'All Statuses', value: '' },
@@ -25,11 +17,24 @@ const AVAILABILITY_OPTIONS = [
 
 export const MenuPage: React.FC = () => {
   const [items, setItems] = useState<MenuItem[]>([])
+  const [categories, setCategories] = useState<string[]>(DEFAULT_CATEGORIES)
   const [categoryFilter, setCategoryFilter] = useState('')
   const [availabilityFilter, setAvailabilityFilter] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [itemToEdit, setItemToEdit] = useState<MenuItem | null>(null)
+
+  const fetchCategories = async () => {
+    try {
+      const res = await api.get('/api/v1/menu/categories')
+      if (Array.isArray(res.data) && res.data.length > 0) {
+        const merged = Array.from(new Set([...DEFAULT_CATEGORIES, ...res.data]))
+        setCategories(merged)
+      }
+    } catch (err) {
+      console.error('Failed to load categories', err)
+    }
+  }
 
   const fetchMenuItems = async () => {
     try {
@@ -48,8 +53,17 @@ export const MenuPage: React.FC = () => {
   }
 
   useEffect(() => {
+    fetchCategories()
+  }, [])
+
+  useEffect(() => {
     fetchMenuItems()
   }, [categoryFilter, availabilityFilter])
+
+  const categoryOptions = [
+    { label: 'All Categories', value: '' },
+    ...categories.map((c) => ({ label: c, value: c })),
+  ]
 
   const handleOpenAddModal = () => {
     setItemToEdit(null)
@@ -61,6 +75,11 @@ export const MenuPage: React.FC = () => {
     setIsModalOpen(true)
   }
 
+  const handleModalSuccess = () => {
+    fetchCategories()
+    fetchMenuItems()
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -70,7 +89,7 @@ export const MenuPage: React.FC = () => {
             Menu Management
           </h2>
           <p className="text-xs text-stone-500 font-medium">
-            Manage cafe items, prices, and availability
+            Manage cafe items, custom categories, prices, and availability
           </p>
         </div>
 
@@ -84,7 +103,7 @@ export const MenuPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row items-center gap-3 bg-white p-3 border border-stone-200/80 rounded-2xl shadow-xs">
         <div className="w-full sm:w-64">
           <Select
-            options={CATEGORY_OPTIONS}
+            options={categoryOptions}
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
           />
@@ -129,7 +148,7 @@ export const MenuPage: React.FC = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         itemToEdit={itemToEdit}
-        onSuccess={fetchMenuItems}
+        onSuccess={handleModalSuccess}
       />
     </div>
   )

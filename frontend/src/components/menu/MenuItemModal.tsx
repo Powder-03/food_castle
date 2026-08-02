@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Modal } from '@/components/ui/Modal'
 import { Input } from '@/components/ui/Input'
-import { Select } from '@/components/ui/Select'
 import { Button } from '@/components/ui/Button'
 import { MenuItem } from '@/lib/types'
 import api from '@/lib/api'
@@ -14,11 +13,19 @@ interface MenuItemModalProps {
   onSuccess: () => void
 }
 
-const CATEGORIES = [
-  { label: 'Beverages', value: 'Beverages' },
-  { label: 'Mains', value: 'Mains' },
-  { label: 'Snacks', value: 'Snacks' },
-  { label: 'Desserts', value: 'Desserts' },
+export const DEFAULT_CATEGORIES = [
+  'Beverages',
+  'Burgers',
+  'Sandwiches',
+  'Maggie',
+  'French Fries',
+  'Chowmein',
+  'Pasta',
+  'Fried Rice',
+  'Chinese Special',
+  'Pizza',
+  'Momos',
+  'Combo Offers',
 ]
 
 export const MenuItemModal: React.FC<MenuItemModalProps> = ({
@@ -29,6 +36,7 @@ export const MenuItemModal: React.FC<MenuItemModalProps> = ({
 }) => {
   const [name, setName] = useState('')
   const [category, setCategory] = useState('Beverages')
+  const [existingCategories, setExistingCategories] = useState<string[]>(DEFAULT_CATEGORIES)
   const [hasVariants, setHasVariants] = useState(false)
   const [priceSingle, setPriceSingle] = useState<string>('')
   const [priceHalf, setPriceHalf] = useState<string>('')
@@ -36,6 +44,24 @@ export const MenuItemModal: React.FC<MenuItemModalProps> = ({
   const [isAvailable, setIsAvailable] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    // Fetch distinct categories for suggestions
+    const fetchCategories = async () => {
+      try {
+        const res = await api.get('/api/v1/menu/categories')
+        if (Array.isArray(res.data) && res.data.length > 0) {
+          const merged = Array.from(new Set([...DEFAULT_CATEGORIES, ...res.data]))
+          setExistingCategories(merged)
+        }
+      } catch (err) {
+        console.error('Failed to fetch category list', err)
+      }
+    }
+    if (isOpen) {
+      fetchCategories()
+    }
+  }, [isOpen])
 
   useEffect(() => {
     if (itemToEdit) {
@@ -67,6 +93,11 @@ export const MenuItemModal: React.FC<MenuItemModalProps> = ({
       return
     }
 
+    if (!category.trim()) {
+      setError('Category is required.')
+      return
+    }
+
     if (!hasVariants && (!priceSingle || Number(priceSingle) <= 0)) {
       setError('Single price item must have a valid positive price.')
       return
@@ -79,7 +110,7 @@ export const MenuItemModal: React.FC<MenuItemModalProps> = ({
 
     const payload = {
       name: name.trim(),
-      category,
+      category: category.trim(),
       has_variants: hasVariants,
       price_single: !hasVariants && priceSingle ? Number(priceSingle) : null,
       price_half: hasVariants && priceHalf ? Number(priceHalf) : null,
@@ -121,18 +152,49 @@ export const MenuItemModal: React.FC<MenuItemModalProps> = ({
 
         <Input
           label="Item Name"
-          placeholder="e.g., Cold Coffee"
+          placeholder="e.g., Veg Cheese Burger"
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
         />
 
-        <Select
-          label="Category"
-          options={CATEGORIES}
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-        />
+        <div className="space-y-1.5">
+          <label className="block text-xs font-semibold text-stone-700 tracking-wide uppercase">
+            Category (Select or type custom)
+          </label>
+          <input
+            list="category-suggestions"
+            type="text"
+            className="w-full bg-white border border-stone-200 rounded-xl px-3.5 py-2.5 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all"
+            placeholder="Type or select category"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            required
+          />
+          <datalist id="category-suggestions">
+            {existingCategories.map((cat) => (
+              <option key={cat} value={cat} />
+            ))}
+          </datalist>
+
+          {/* Quick Selection Pills */}
+          <div className="flex flex-wrap gap-1.5 pt-1.5 max-h-36 overflow-y-auto no-scrollbar">
+            {existingCategories.map((cat) => (
+              <button
+                type="button"
+                key={cat}
+                onClick={() => setCategory(cat)}
+                className={`text-[11px] font-bold px-2.5 py-1 rounded-full border transition-all ${
+                  category.toLowerCase() === cat.toLowerCase()
+                    ? 'bg-amber-500 text-white border-amber-500 shadow-xs'
+                    : 'bg-stone-100 text-stone-700 border-stone-200 hover:bg-stone-200'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </div>
 
         <div className="flex items-center justify-between p-3 bg-stone-50 border border-stone-200 rounded-xl">
           <div>

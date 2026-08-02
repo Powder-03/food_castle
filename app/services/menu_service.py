@@ -14,7 +14,7 @@ class MenuService:
     async def create_menu_item(self, data: MenuItemCreate) -> MenuItem:
         menu_item = MenuItem(
             name=data.name,
-            category=data.category,
+            category=data.category.strip(),
             has_variants=data.has_variants,
             price_single=data.price_single,
             price_half=data.price_half,
@@ -26,6 +26,9 @@ class MenuService:
     async def get_menu_items(self, category: Optional[str] = None, is_available: Optional[bool] = None) -> List[MenuItem]:
         return await self.repository.get_filtered(category=category, is_available=is_available)
 
+    async def get_categories(self) -> List[str]:
+        return await self.repository.get_categories()
+
     async def update_menu_item(self, item_id: int, data: MenuItemUpdate) -> MenuItem:
         item = await self.repository.get_by_id(item_id)
         if not item:
@@ -36,7 +39,10 @@ class MenuService:
 
         update_data = data.model_dump(exclude_unset=True)
         for key, value in update_data.items():
-            setattr(item, key, value)
+            if key == "category" and isinstance(value, str):
+                setattr(item, key, value.strip())
+            else:
+                setattr(item, key, value)
 
         # Validate variant structure consistency after update
         if not item.has_variants:

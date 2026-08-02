@@ -31,6 +31,15 @@ async def list_menu_items(
     return await service.get_menu_items(category=category, is_available=is_available)
 
 
+@router.get("/categories", response_model=List[str])
+async def list_categories(
+    db: AsyncSession = Depends(get_db),
+    admin: str = Depends(get_current_admin),
+):
+    service = MenuService(db)
+    return await service.get_categories()
+
+
 @router.patch("/{item_id}", response_model=MenuItemResponse)
 async def update_menu_item(
     item_id: int,
