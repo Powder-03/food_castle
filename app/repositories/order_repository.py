@@ -26,7 +26,10 @@ class OrderRepository(BaseRepository[Order]):
         stmt = (
             select(Order)
             .options(selectinload(Order.items).selectinload(OrderItem.menu_item))
-            .filter(Order.status == OrderStatus.PENDING, Order.is_deleted.is_(False))
+            .filter(
+                Order.status == OrderStatus.PENDING,
+                or_(Order.is_deleted.is_(False), Order.is_deleted.is_(None)),
+            )
             .order_by(Order.created_at.asc())
         )
         result = await self.db.execute(stmt)
@@ -87,7 +90,7 @@ class OrderRepository(BaseRepository[Order]):
             .filter(
                 Order.created_at >= start_time,
                 Order.created_at <= end_time,
-                Order.is_deleted.is_(False),
+                or_(Order.is_deleted.is_(False), Order.is_deleted.is_(None)),
             )
         )
         result = await self.db.execute(stmt)

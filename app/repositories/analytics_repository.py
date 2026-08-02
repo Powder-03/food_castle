@@ -1,7 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
 from typing import Dict, List, Any
-from sqlalchemy import func, select
+from sqlalchemy import func, select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.enums import OrderStatus, OrderType
@@ -21,7 +21,7 @@ class AnalyticsRepository:
             )
             .filter(
                 Order.status == OrderStatus.COMPLETED,
-                Order.is_deleted.is_(False),
+                or_(Order.is_deleted.is_(False), Order.is_deleted.is_(None)),
                 Order.created_at >= start_time,
                 Order.created_at <= end_time,
             )
@@ -47,7 +47,7 @@ class AnalyticsRepository:
             )
             .filter(
                 Order.status == OrderStatus.COMPLETED,
-                Order.is_deleted.is_(False),
+                or_(Order.is_deleted.is_(False), Order.is_deleted.is_(None)),
                 Order.created_at >= start_time,
                 Order.created_at <= end_time,
             )
@@ -78,7 +78,7 @@ class AnalyticsRepository:
             )
             .filter(
                 Order.status == OrderStatus.COMPLETED,
-                Order.is_deleted.is_(False),
+                or_(Order.is_deleted.is_(False), Order.is_deleted.is_(None)),
                 Order.created_at >= start_time,
                 Order.created_at <= end_time,
             )
@@ -106,7 +106,7 @@ class AnalyticsRepository:
             .join(Order, OrderItem.order_id == Order.id)
             .filter(
                 Order.status == OrderStatus.COMPLETED,
-                Order.is_deleted.is_(False),
+                or_(Order.is_deleted.is_(False), Order.is_deleted.is_(None)),
                 Order.created_at >= start_time,
                 Order.created_at <= end_time,
             )
@@ -136,7 +136,7 @@ class AnalyticsRepository:
             .join(Order, OrderItem.order_id == Order.id)
             .filter(
                 Order.status == OrderStatus.COMPLETED,
-                Order.is_deleted.is_(False),
+                or_(Order.is_deleted.is_(False), Order.is_deleted.is_(None)),
                 Order.created_at >= start_time,
                 Order.created_at <= end_time,
             )
