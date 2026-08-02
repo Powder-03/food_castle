@@ -5,6 +5,7 @@ import {
   PlusCircle,
   ChefHat,
   UtensilsCrossed,
+  History,
   BarChart3,
   LogOut,
 } from 'lucide-react'
@@ -28,6 +29,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ pendingCount = 0 }) => {
     { label: 'Dashboard', path: '/', icon: LayoutDashboard },
     { label: 'New Order', path: '/orders/new', icon: PlusCircle, highlight: true },
     { label: 'Kitchen Queue', path: '/orders/queue', icon: ChefHat, badge: pendingCount },
+    { label: 'Order History', path: '/orders/history', icon: History },
     { label: 'Menu', path: '/menu', icon: UtensilsCrossed },
     { label: 'Analytics', path: '/analytics', icon: BarChart3 },
   ]

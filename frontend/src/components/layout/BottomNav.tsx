@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   PlusCircle,
   ChefHat,
+  History,
   UtensilsCrossed,
   BarChart3,
 } from 'lucide-react'
@@ -16,10 +17,10 @@ interface BottomNavProps {
 export const BottomNav: React.FC<BottomNavProps> = ({ pendingCount = 0 }) => {
   const navItems = [
     { label: 'Home', path: '/', icon: LayoutDashboard },
-    { label: 'Menu', path: '/menu', icon: UtensilsCrossed },
     { label: 'New Order', path: '/orders/new', icon: PlusCircle, isMain: true },
     { label: 'Kitchen', path: '/orders/queue', icon: ChefHat, badge: pendingCount },
-    { label: 'Analytics', path: '/analytics', icon: BarChart3 },
+    { label: 'History', path: '/orders/history', icon: History },
+    { label: 'Menu', path: '/menu', icon: UtensilsCrossed },
   ]
 
   return (

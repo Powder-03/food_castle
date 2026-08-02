@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from decimal import Decimal
-from typing import List
+from typing import List, Optional
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -85,12 +85,30 @@ class OrderService:
             status=OrderStatus.PENDING,
             payment_status=PaymentStatus.UNPAID,
             created_by_admin=current_admin,
+            is_deleted=False,
         )
 
         return await self.order_repo.create_order_with_items(order, order_items)
 
     async def get_active_orders(self) -> List[Order]:
         return await self.order_repo.get_active_orders()
+
+    async def get_order_history(
+        self,
+        search: Optional[str] = None,
+        status: Optional[OrderStatus] = None,
+        limit: int = 100,
+    ) -> List[Order]:
+        return await self.order_repo.get_order_history(search=search, status=status, limit=limit)
+
+    async def soft_delete_order(self, order_id: int) -> Order:
+        order = await self.order_repo.soft_delete_order(order_id)
+        if not order:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Order with ID {order_id} not found."
+            )
+        return order
 
     async def update_order_status(self, order_id: int, status_update: OrderStatusUpdate) -> Order:
         order = await self.order_repo.get_order_by_id(order_id)

@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from sqlalchemy import Column, Integer, String, Numeric, DateTime, ForeignKey, Enum as SQLEnum
+from sqlalchemy import Column, Integer, String, Numeric, DateTime, ForeignKey, Boolean, Enum as SQLEnum
 from sqlalchemy.orm import relationship
 
 from app.core.database import Base
@@ -22,6 +22,7 @@ class Order(Base):
     created_by_admin = Column(String(100), nullable=False)
     created_at = Column(DateTime(timezone=True), default=utc_now, nullable=False)
     completed_at = Column(DateTime(timezone=True), nullable=True)
+    is_deleted = Column(Boolean, default=False, server_default="false", nullable=False)
 
     items = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
 

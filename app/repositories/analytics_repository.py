@@ -21,6 +21,7 @@ class AnalyticsRepository:
             )
             .filter(
                 Order.status == OrderStatus.COMPLETED,
+                Order.is_deleted.is_(False),
                 Order.created_at >= start_time,
                 Order.created_at <= end_time,
             )
@@ -46,6 +47,7 @@ class AnalyticsRepository:
             )
             .filter(
                 Order.status == OrderStatus.COMPLETED,
+                Order.is_deleted.is_(False),
                 Order.created_at >= start_time,
                 Order.created_at <= end_time,
             )
@@ -76,6 +78,7 @@ class AnalyticsRepository:
             )
             .filter(
                 Order.status == OrderStatus.COMPLETED,
+                Order.is_deleted.is_(False),
                 Order.created_at >= start_time,
                 Order.created_at <= end_time,
             )
@@ -103,6 +106,7 @@ class AnalyticsRepository:
             .join(Order, OrderItem.order_id == Order.id)
             .filter(
                 Order.status == OrderStatus.COMPLETED,
+                Order.is_deleted.is_(False),
                 Order.created_at >= start_time,
                 Order.created_at <= end_time,
             )
@@ -132,6 +136,7 @@ class AnalyticsRepository:
             .join(Order, OrderItem.order_id == Order.id)
             .filter(
                 Order.status == OrderStatus.COMPLETED,
+                Order.is_deleted.is_(False),
                 Order.created_at >= start_time,
                 Order.created_at <= end_time,
             )

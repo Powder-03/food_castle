@@ -8,6 +8,7 @@ import { DashboardPage } from '@/pages/DashboardPage'
 import { MenuPage } from '@/pages/MenuPage'
 import { NewOrderPage } from '@/pages/NewOrderPage'
 import { KitchenQueuePage } from '@/pages/KitchenQueuePage'
+import { OrderHistoryPage } from '@/pages/OrderHistoryPage'
 import { AnalyticsPage } from '@/pages/AnalyticsPage'
 
 export const App: React.FC = () => {
@@ -36,6 +37,7 @@ export const App: React.FC = () => {
           <Route path="/menu" element={<MenuPage />} />
           <Route path="/orders/new" element={<NewOrderPage />} />
           <Route path="/orders/queue" element={<KitchenQueuePage />} />
+          <Route path="/orders/history" element={<OrderHistoryPage />} />
           <Route path="/analytics" element={<AnalyticsPage />} />
         </Route>
 

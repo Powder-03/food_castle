@@ -45,6 +45,7 @@ class OrderResponse(BaseModel):
     created_by_admin: str
     created_at: datetime
     completed_at: Optional[datetime] = None
+    is_deleted: bool = False
     items: List[OrderItemResponse]
 
     model_config = ConfigDict(from_attributes=True)
