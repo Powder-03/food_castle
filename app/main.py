@@ -11,15 +11,23 @@ from app.core.database import async_engine, Base
 logger = logging.getLogger("uvicorn")
 
 
+import threading
+
 def run_migrations():
-    """Run Alembic database migrations programmatically on app startup."""
-    try:
-        logger.info("Running database migrations via Alembic...")
-        alembic_cfg = Config("alembic.ini")
-        command.upgrade(alembic_cfg, "head")
-        logger.info("Database migrations completed successfully.")
-    except Exception as e:
-        logger.error(f"Error running database migrations: {e}")
+    """Run Alembic database migrations programmatically on app startup inside a separate thread."""
+    def _upgrade():
+        try:
+            logger.info("Running database migrations via Alembic...")
+            alembic_cfg = Config("alembic.ini")
+            command.upgrade(alembic_cfg, "head")
+            logger.info("Database migrations completed successfully.")
+        except Exception as e:
+            logger.error(f"Error running database migrations: {e}")
+
+    thread = threading.Thread(target=_upgrade)
+    thread.start()
+    thread.join()
+
 
 
 @asynccontextmanager
