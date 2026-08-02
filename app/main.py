@@ -1,14 +1,33 @@
 from contextlib import asynccontextmanager
+import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from alembic.config import Config
+from alembic import command
 
 from app.api.router import api_router
 from app.core.database import async_engine, Base
 
+logger = logging.getLogger("uvicorn")
+
+
+def run_migrations():
+    """Run Alembic database migrations programmatically on app startup."""
+    try:
+        logger.info("Running database migrations via Alembic...")
+        alembic_cfg = Config("alembic.ini")
+        command.upgrade(alembic_cfg, "head")
+        logger.info("Database migrations completed successfully.")
+    except Exception as e:
+        logger.error(f"Error running database migrations: {e}")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Ensure database schema is created on startup if tables do not exist
+    # Programmatically run Alembic migrations on startup
+    run_migrations()
+    
+    # Ensure database schema fallback if using direct tables
     async with async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     yield
