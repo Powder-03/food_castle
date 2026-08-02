@@ -1,0 +1,113 @@
+from datetime import datetime, timezone
+from decimal import Decimal
+from typing import List
+from fastapi import HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models.enums import OrderStatus, PaymentStatus, PortionSize
+from app.models.order import Order, OrderItem
+from app.repositories.menu_repository import MenuRepository
+from app.repositories.order_repository import OrderRepository
+from app.schemas.order import OrderCreate, OrderStatusUpdate
+
+
+class OrderService:
+    def __init__(self, db: AsyncSession):
+        self.db = db
+        self.order_repo = OrderRepository(db)
+        self.menu_repo = MenuRepository(db)
+
+    async def create_order(self, data: OrderCreate, current_admin: str) -> Order:
+        menu_item_ids = [item.menu_item_id for item in data.items]
+        fetched_items = await self.menu_repo.get_by_ids(menu_item_ids)
+        db_menu_items = {m.id: m for m in fetched_items}
+
+        order_items: List[OrderItem] = []
+        calculated_total = Decimal("0.00")
+
+        for item_data in data.items:
+            menu_item = db_menu_items.get(item_data.menu_item_id)
+            if not menu_item:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Menu item with ID {item_data.menu_item_id} not found."
+                )
+            if not menu_item.is_available:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Menu item '{menu_item.name}' is currently unavailable."
+                )
+
+            # Calculate unit price based on portion size snapshot
+            unit_price: Decimal
+            if item_data.portion_size == PortionSize.SINGLE:
+                if menu_item.price_single is None:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"Single portion price not configured for item '{menu_item.name}'."
+                    )
+                unit_price = Decimal(str(menu_item.price_single))
+            elif item_data.portion_size == PortionSize.HALF:
+                if menu_item.price_half is None:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"Half portion price not configured for item '{menu_item.name}'."
+                    )
+                unit_price = Decimal(str(menu_item.price_half))
+            elif item_data.portion_size == PortionSize.FULL:
+                if menu_item.price_full is None:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"Full portion price not configured for item '{menu_item.name}'."
+                    )
+                unit_price = Decimal(str(menu_item.price_full))
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Invalid portion size '{item_data.portion_size}'."
+                )
+
+            line_total = unit_price * item_data.quantity
+            calculated_total += line_total
+
+            order_item = OrderItem(
+                menu_item_id=menu_item.id,
+                portion_size=item_data.portion_size,
+                quantity=item_data.quantity,
+                unit_price=unit_price,
+            )
+            order_items.append(order_item)
+
+        order = Order(
+            order_type=data.order_type,
+            table_number=data.table_number,
+            total_amount=round(calculated_total, 2),
+            status=OrderStatus.PENDING,
+            payment_status=PaymentStatus.UNPAID,
+            created_by_admin=current_admin,
+        )
+
+        return await self.order_repo.create_order_with_items(order, order_items)
+
+    async def get_active_orders(self) -> List[Order]:
+        return await self.order_repo.get_active_orders()
+
+    async def update_order_status(self, order_id: int, status_update: OrderStatusUpdate) -> Order:
+        order = await self.order_repo.get_order_by_id(order_id)
+        if not order:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Order with ID {order_id} not found."
+            )
+
+        if status_update.status is not None:
+            order.status = status_update.status
+            if status_update.status == OrderStatus.COMPLETED:
+                order.completed_at = datetime.now(timezone.utc)
+                if status_update.payment_status is None:
+                    order.payment_status = PaymentStatus.PAID
+
+        if status_update.payment_status is not None:
+            order.payment_status = status_update.payment_status
+
+        return await self.order_repo.update(order)
