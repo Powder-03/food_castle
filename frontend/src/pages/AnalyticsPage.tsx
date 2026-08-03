@@ -306,7 +306,7 @@ export const AnalyticsPage: React.FC = () => {
             <Skeleton className="h-40" />
           ) : (
             <div className="space-y-2.5">
-              {summary?.top_selling_products.map((prod, idx) => (
+              {summary?.top_selling_products.map((prod: any, idx: number) => (
                 <div
                   key={`${prod.name}-${prod.portion_size}`}
                   className="flex items-center justify-between p-2.5 bg-stone-50 border border-stone-200/80 rounded-xl"
