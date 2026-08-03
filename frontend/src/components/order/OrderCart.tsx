@@ -120,7 +120,7 @@ export const OrderCart: React.FC<OrderCartProps> = ({ onOrderSuccess }) => {
       </div>
 
       {/* Item List */}
-      <div className="flex-1 overflow-y-auto space-y-2.5 max-h-[360px] pr-1">
+      <div className="flex-1 overflow-y-auto space-y-2.5 max-h-[calc(100vh-340px)] min-h-[160px] pr-1">
         {items.length === 0 ? (
           <div className="py-12 text-center text-stone-400 space-y-2">
             <ShoppingBag className="w-8 h-8 mx-auto stroke-1" />

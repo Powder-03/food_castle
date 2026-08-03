@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/Skeleton'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Plus, UtensilsCrossed } from 'lucide-react'
 import api from '@/lib/api'
+import toast from 'react-hot-toast'
 
 const AVAILABILITY_OPTIONS = [
   { label: 'All Statuses', value: '' },
@@ -75,6 +76,21 @@ export const MenuPage: React.FC = () => {
     setIsModalOpen(true)
   }
 
+  const handleDeleteItem = async (item: MenuItem) => {
+    if (!window.confirm(`Are you sure you want to delete "${item.name}" from the menu?`)) {
+      return
+    }
+    try {
+      await api.delete(`/api/v1/menu/${item.id}`)
+      toast.success(`"${item.name}" deleted successfully`)
+      fetchCategories()
+      fetchMenuItems()
+    } catch (err: any) {
+      console.error('Failed to delete menu item', err)
+      toast.error(err.response?.data?.detail || 'Failed to delete menu item')
+    }
+  }
+
   const handleModalSuccess = () => {
     fetchCategories()
     fetchMenuItems()
@@ -138,7 +154,12 @@ export const MenuPage: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {items.map((item) => (
-            <MenuItemCard key={item.id} item={item} onEdit={handleOpenEditModal} />
+            <MenuItemCard
+              key={item.id}
+              item={item}
+              onEdit={handleOpenEditModal}
+              onDelete={handleDeleteItem}
+            />
           ))}
         </div>
       )}

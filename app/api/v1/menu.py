@@ -49,3 +49,15 @@ async def update_menu_item(
 ):
     service = MenuService(db)
     return await service.update_menu_item(item_id=item_id, data=payload)
+
+
+@router.delete("/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_menu_item(
+    item_id: int,
+    db: AsyncSession = Depends(get_db),
+    admin: str = Depends(get_current_admin),
+):
+    service = MenuService(db)
+    await service.delete_menu_item(item_id)
+    return None
+

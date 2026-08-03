@@ -3,14 +3,15 @@ import { MenuItem } from '@/lib/types'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { formatCurrency } from '@/lib/utils'
-import { Edit2 } from 'lucide-react'
+import { Edit2, Trash2 } from 'lucide-react'
 
 interface MenuItemCardProps {
   item: MenuItem
   onEdit: (item: MenuItem) => void
+  onDelete?: (item: MenuItem) => void
 }
 
-export const MenuItemCard: React.FC<MenuItemCardProps> = ({ item, onEdit }) => {
+export const MenuItemCard: React.FC<MenuItemCardProps> = ({ item, onEdit, onDelete }) => {
   return (
     <Card hoverEffect className="relative flex flex-col justify-between space-y-4">
       <div>
@@ -18,13 +19,24 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({ item, onEdit }) => {
           <h4 className="font-bold text-stone-900 text-base leading-tight">
             {item.name}
           </h4>
-          <button
-            onClick={() => onEdit(item)}
-            className="p-1.5 text-stone-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all"
-            title="Edit Item"
-          >
-            <Edit2 className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-1 shrink-0">
+            <button
+              onClick={() => onEdit(item)}
+              className="p-1.5 text-stone-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all"
+              title="Edit Item"
+            >
+              <Edit2 className="w-4 h-4" />
+            </button>
+            {onDelete && (
+              <button
+                onClick={() => onDelete(item)}
+                className="p-1.5 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
+                title="Delete Item"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="flex items-center gap-2 mt-2">

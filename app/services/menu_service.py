@@ -59,3 +59,13 @@ class MenuService:
                 )
 
         return await self.repository.update(item)
+
+    async def delete_menu_item(self, item_id: int) -> bool:
+        item = await self.repository.get_by_id(item_id)
+        if not item:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Menu item with ID {item_id} not found."
+            )
+        return await self.repository.delete(item_id)
+
