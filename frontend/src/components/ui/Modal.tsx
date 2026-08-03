@@ -32,9 +32,9 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }
         onClick={onClose}
         aria-hidden="true"
       />
-      <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-xl border border-stone-100 overflow-hidden z-10">
+      <div className="relative w-full max-w-lg max-h-[90vh] flex flex-col bg-white rounded-3xl shadow-xl border border-stone-100 overflow-hidden z-10">
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-stone-100 bg-stone-50/50">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-stone-100 bg-stone-50/50 shrink-0">
           <h3 className="text-lg font-bold text-stone-900">{title}</h3>
           <button
             onClick={onClose}
@@ -45,7 +45,7 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }
         </div>
 
         {/* Modal Content */}
-        <div className="p-6">{children}</div>
+        <div className="p-6 overflow-y-auto max-h-[calc(90vh-70px)] flex-1">{children}</div>
       </div>
     </div>
   )

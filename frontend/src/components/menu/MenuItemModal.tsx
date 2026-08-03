@@ -178,7 +178,7 @@ export const MenuItemModal: React.FC<MenuItemModalProps> = ({
           </datalist>
 
           {/* Quick Selection Pills */}
-          <div className="flex flex-wrap gap-1.5 pt-1.5 max-h-36 overflow-y-auto no-scrollbar">
+          <div className="flex flex-wrap gap-1.5 pt-1.5 max-h-24 overflow-y-auto pr-1">
             {existingCategories.map((cat) => (
               <button
                 type="button"
@@ -252,7 +252,8 @@ export const MenuItemModal: React.FC<MenuItemModalProps> = ({
           />
         </div>
 
-        <div className="flex items-center justify-end gap-3 pt-2">
+        {/* Sticky Action Footer */}
+        <div className="sticky bottom-0 bg-white pt-3 pb-1 border-t border-stone-100 flex items-center justify-end gap-3 z-10">
           <Button type="button" variant="outline" onClick={onClose}>
             Cancel
           </Button>

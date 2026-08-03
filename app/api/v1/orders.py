@@ -34,12 +34,15 @@ async def get_active_orders(
 async def get_order_history(
     search: Optional[str] = Query(default=None, description="Search by Order ID, Table #, or Admin name"),
     status: Optional[OrderStatus] = Query(default=None, description="Filter by status (PENDING, COMPLETED, CANCELLED)"),
+    include_deleted: bool = Query(default=False, description="Include soft-deleted/refunded orders"),
     limit: int = Query(default=100, ge=1, le=500),
     db: AsyncSession = Depends(get_db),
     admin: str = Depends(get_current_admin),
 ):
     service = OrderService(db)
-    return await service.get_order_history(search=search, status=status, limit=limit)
+    return await service.get_order_history(
+        search=search, status=status, limit=limit, include_deleted=include_deleted
+    )
 
 
 @router.patch("/{order_id}/status", response_model=OrderResponse)

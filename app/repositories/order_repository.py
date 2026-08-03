@@ -40,6 +40,7 @@ class OrderRepository(BaseRepository[Order]):
         search: Optional[str] = None,
         status: Optional[OrderStatus] = None,
         limit: int = 100,
+        include_deleted: bool = False,
     ) -> List[Order]:
         stmt = (
             select(Order)
@@ -47,6 +48,9 @@ class OrderRepository(BaseRepository[Order]):
             .order_by(Order.created_at.desc())
             .limit(limit)
         )
+
+        if not include_deleted:
+            stmt = stmt.filter(or_(Order.is_deleted.is_(False), Order.is_deleted.is_(None)))
 
         if status:
             stmt = stmt.filter(Order.status == status)

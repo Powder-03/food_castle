@@ -24,6 +24,7 @@ export const OrderHistoryPage: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([])
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
+  const [includeDeleted, setIncludeDeleted] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
   // Soft Delete / Refund Modal state
@@ -36,6 +37,7 @@ export const OrderHistoryPage: React.FC = () => {
       const params: Record<string, any> = {}
       if (search.trim()) params.search = search.trim()
       if (statusFilter) params.status = statusFilter
+      if (includeDeleted) params.include_deleted = true
 
       const res = await api.get('/api/v1/orders/history', { params })
       setOrders(res.data)
@@ -48,7 +50,7 @@ export const OrderHistoryPage: React.FC = () => {
 
   useEffect(() => {
     fetchHistory()
-  }, [statusFilter])
+  }, [statusFilter, includeDeleted])
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -97,7 +99,7 @@ export const OrderHistoryPage: React.FC = () => {
       </div>
 
       {/* Search & Filter Bar */}
-      <Card className="p-4">
+      <Card className="p-4 space-y-3">
         <form
           onSubmit={handleSearchSubmit}
           className="flex flex-col sm:flex-row items-center gap-3"
@@ -123,6 +125,18 @@ export const OrderHistoryPage: React.FC = () => {
             Search
           </Button>
         </form>
+
+        <div className="flex items-center gap-2 pt-2 border-t border-stone-100">
+          <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-stone-600 select-none">
+            <input
+              type="checkbox"
+              checked={includeDeleted}
+              onChange={(e) => setIncludeDeleted(e.target.checked)}
+              className="w-4 h-4 accent-amber-500 rounded cursor-pointer"
+            />
+            Show Refunded / Soft-Deleted Orders
+          </label>
+        </div>
       </Card>
 
       {/* Orders List */}

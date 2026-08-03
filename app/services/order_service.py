@@ -98,8 +98,11 @@ class OrderService:
         search: Optional[str] = None,
         status: Optional[OrderStatus] = None,
         limit: int = 100,
+        include_deleted: bool = False,
     ) -> List[Order]:
-        return await self.order_repo.get_order_history(search=search, status=status, limit=limit)
+        return await self.order_repo.get_order_history(
+            search=search, status=status, limit=limit, include_deleted=include_deleted
+        )
 
     async def soft_delete_order(self, order_id: int) -> Order:
         order = await self.order_repo.soft_delete_order(order_id)
