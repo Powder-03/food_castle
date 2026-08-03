@@ -19,6 +19,31 @@ def run_migrations():
         try:
             logger.info("Running database migrations via Alembic...")
             alembic_cfg = Config("alembic.ini")
+            
+            # Check if we need to stamp the initial schema
+            # We do this by checking if Alembic says we are at 'base' but tables actually exist
+            from alembic.migration import MigrationContext
+            from sqlalchemy import create_engine
+            from sqlalchemy.engine.reflection import Inspector
+            from app.core.config import settings
+            
+            # Use sync url for inspector
+            sync_url = settings.DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://")
+            engine = create_engine(sync_url)
+            
+            with engine.connect() as connection:
+                context = MigrationContext.configure(connection)
+                current_rev = context.get_current_revision()
+                
+                # Check if tables exist
+                inspector = Inspector.from_engine(engine)
+                tables = inspector.get_table_names()
+                
+                if current_rev is None and "menu_items" in tables:
+                    logger.info("Tables exist but no alembic version found. Stamping initial schema...")
+                    command.stamp(alembic_cfg, "001_initial_schema")
+            
+            # Now run the upgrade
             command.upgrade(alembic_cfg, "head")
             logger.info("Database migrations completed successfully.")
         except Exception as e:
