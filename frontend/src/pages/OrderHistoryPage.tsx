@@ -9,7 +9,7 @@ import { Modal } from '@/components/ui/Modal'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { formatCurrency, formatDate } from '@/lib/utils'
-import { Search, History, RefreshCcw, Table, User, Clock, AlertTriangle } from 'lucide-react'
+import { Search, History, RefreshCcw, Table, User, Clock, AlertTriangle, Trash2, RotateCcw } from 'lucide-react'
 import api from '@/lib/api'
 import toast from 'react-hot-toast'
 
@@ -167,7 +167,7 @@ export const OrderHistoryPage: React.FC = () => {
                 }`}
               >
                 {/* Order Top Bar */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-stone-100 pb-3">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-100 pb-3">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-lg font-extrabold text-stone-900">
                       #{order.id}
@@ -187,6 +187,17 @@ export const OrderHistoryPage: React.FC = () => {
                     ) : (
                       <Badge variant="amber">PENDING</Badge>
                     )}
+
+                    {/* Payment Status Badge */}
+                    {order.payment_status === 'PAID' ? (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
+                        PAID
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-black bg-amber-100 text-amber-900 border border-amber-300">
+                        NOT PAID
+                      </span>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-3 text-xs text-stone-500 font-medium">
@@ -205,6 +216,18 @@ export const OrderHistoryPage: React.FC = () => {
                       {formatDate(order.created_at)}
                     </span>
                   </div>
+
+                  {!isRefundedOrDeleted && (
+                    <button
+                      type="button"
+                      onClick={() => setOrderToRefund(order)}
+                      className="px-2.5 py-1 text-xs font-extrabold bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200/80 rounded-lg flex items-center gap-1.5 transition-all shrink-0 active:scale-95 ml-auto sm:ml-0"
+                      title="Refund & Soft Delete Order"
+                    >
+                      <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                      <span>Refund & Delete</span>
+                    </button>
+                  )}
                 </div>
 
                 {/* Items Breakdown */}
@@ -235,7 +258,7 @@ export const OrderHistoryPage: React.FC = () => {
                 </div>
 
                 {/* Footer Bar */}
-                <div className="pt-3 border-t border-stone-100 flex items-center justify-between gap-3">
+                <div className="pt-3 border-t border-stone-100 flex items-center justify-between gap-3 flex-wrap">
                   <div>
                     <p className="text-[10px] uppercase font-bold text-stone-400">
                       Total Amount
@@ -256,7 +279,9 @@ export const OrderHistoryPage: React.FC = () => {
                       variant="danger"
                       size="sm"
                       onClick={() => setOrderToRefund(order)}
+                      className="shrink-0 font-extrabold text-xs py-2 px-3 flex items-center gap-1.5 shadow-sm shadow-rose-500/20"
                     >
+                      <RotateCcw className="w-3.5 h-3.5" />
                       Refund & Soft Delete
                     </Button>
                   )}

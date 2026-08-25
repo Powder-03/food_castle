@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { MenuItem, OrderType, PortionSize } from '@/lib/types'
+import { MenuItem, OrderType, PaymentStatus, PortionSize } from '@/lib/types'
 
 export interface CartLineItem {
   menuItem: MenuItem
@@ -12,11 +12,13 @@ interface CartState {
   items: CartLineItem[]
   orderType: OrderType
   tableNumber: string
+  paymentStatus: PaymentStatus
   addItem: (item: MenuItem, portionSize: PortionSize) => void
   removeItem: (menuItemId: number, portionSize: PortionSize) => void
   updateQuantity: (menuItemId: number, portionSize: PortionSize, delta: number) => void
   setOrderType: (type: OrderType) => void
   setTableNumber: (table: string) => void
+  setPaymentStatus: (status: PaymentStatus) => void
   clearCart: () => void
   getTotalAmount: () => number
 }
@@ -25,6 +27,7 @@ export const useCartStore = create<CartState>((set, get) => ({
   items: [],
   orderType: 'DINE_IN',
   tableNumber: '',
+  paymentStatus: 'UNPAID',
 
   addItem: (item: MenuItem, portionSize: PortionSize) => {
     // Resolve price
@@ -72,9 +75,10 @@ export const useCartStore = create<CartState>((set, get) => ({
     set({ items: updated })
   },
 
-  setOrderType: (type: OrderType) => set({ orderType: type }),
+  setOrderType: (type: OrderType) => set({ orderType: type, paymentStatus: type === 'TAKEAWAY' ? 'PAID' : 'UNPAID' }),
   setTableNumber: (table: string) => set({ tableNumber: table }),
-  clearCart: () => set({ items: [], tableNumber: '' }),
+  setPaymentStatus: (status: PaymentStatus) => set({ paymentStatus: status }),
+  clearCart: () => set({ items: [], tableNumber: '', paymentStatus: 'UNPAID' }),
 
   getTotalAmount: () => {
     return get().items.reduce((sum, line) => sum + line.unitPrice * line.quantity, 0)

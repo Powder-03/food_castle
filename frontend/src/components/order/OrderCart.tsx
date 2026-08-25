@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Badge } from '@/components/ui/Badge'
 import { formatCurrency } from '@/lib/utils'
-import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react'
+import { Minus, Plus, Trash2, ShoppingBag, CheckCircle2, Clock } from 'lucide-react'
 import api from '@/lib/api'
 import toast from 'react-hot-toast'
 
@@ -18,8 +18,10 @@ export const OrderCart: React.FC<OrderCartProps> = ({ onOrderSuccess }) => {
     items,
     orderType,
     tableNumber,
+    paymentStatus,
     setOrderType,
     setTableNumber,
+    setPaymentStatus,
     updateQuantity,
     removeItem,
     clearCart,
@@ -39,6 +41,7 @@ export const OrderCart: React.FC<OrderCartProps> = ({ onOrderSuccess }) => {
     const payload = {
       order_type: orderType,
       table_number: orderType === 'DINE_IN' ? tableNumber.trim() : null,
+      payment_status: paymentStatus,
       items: items.map((line) => ({
         menu_item_id: line.menuItem.id,
         portion_size: line.portionSize,
@@ -49,7 +52,7 @@ export const OrderCart: React.FC<OrderCartProps> = ({ onOrderSuccess }) => {
     try {
       setIsSubmitting(true)
       const res = await api.post('/api/v1/orders', payload)
-      toast.success(`Order #${res.data.id} placed successfully!`)
+      toast.success(`Order #${res.data.id} placed successfully! (${paymentStatus})`)
       clearCart()
       if (onOrderSuccess) {
         onOrderSuccess(res.data.id)
@@ -117,6 +120,39 @@ export const OrderCart: React.FC<OrderCartProps> = ({ onOrderSuccess }) => {
             onChange={(e) => setTableNumber(e.target.value)}
           />
         )}
+
+        {/* Payment Status Segmented Control */}
+        <div className="space-y-1">
+          <label className="text-[11px] font-bold text-stone-500 uppercase tracking-wider block">
+            Payment Status
+          </label>
+          <div className="grid grid-cols-2 gap-2 bg-stone-100 p-1 rounded-xl">
+            <button
+              type="button"
+              onClick={() => setPaymentStatus('PAID')}
+              className={`py-2 px-2 text-xs font-extrabold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+                paymentStatus === 'PAID'
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'text-stone-600 hover:text-stone-900'
+              }`}
+            >
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              Paid (Pay Now)
+            </button>
+            <button
+              type="button"
+              onClick={() => setPaymentStatus('UNPAID')}
+              className={`py-2 px-2 text-xs font-extrabold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+                paymentStatus === 'UNPAID'
+                  ? 'bg-amber-500 text-white shadow-xs'
+                  : 'text-stone-600 hover:text-stone-900'
+              }`}
+            >
+              <Clock className="w-3.5 h-3.5" />
+              Not Paid (Pay Later)
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Item List */}

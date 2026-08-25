@@ -77,6 +77,15 @@ class OrderRepository(BaseRepository[Order]):
         await self.db.commit()
         return await self.get_order_by_id(order.id)
 
+    async def update_order_with_items(self, order: Order, new_items: Optional[List[OrderItem]] = None) -> Order:
+        if new_items is not None:
+            order.items.clear()
+            for item in new_items:
+                item.order_id = order.id
+                order.items.append(item)
+        await self.db.commit()
+        return await self.get_order_by_id(order.id)
+
     async def soft_delete_order(self, order_id: int) -> Optional[Order]:
         order = await self.get_order_by_id(order_id)
         if not order:

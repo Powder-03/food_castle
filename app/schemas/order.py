@@ -27,7 +27,15 @@ class OrderItemResponse(BaseModel):
 class OrderCreate(BaseModel):
     order_type: OrderType
     table_number: Optional[str] = Field(default=None, max_length=50)
+    payment_status: Optional[PaymentStatus] = PaymentStatus.UNPAID
     items: List[OrderItemCreate] = Field(..., min_length=1)
+
+
+class OrderUpdate(BaseModel):
+    order_type: Optional[OrderType] = None
+    table_number: Optional[str] = Field(default=None, max_length=50)
+    payment_status: Optional[PaymentStatus] = None
+    items: Optional[List[OrderItemCreate]] = Field(default=None, min_length=1)
 
 
 class OrderStatusUpdate(BaseModel):

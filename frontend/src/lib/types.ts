@@ -53,7 +53,15 @@ export interface OrderItem {
 export interface OrderCreate {
   order_type: OrderType;
   table_number?: string | null;
+  payment_status?: PaymentStatus;
   items: OrderItemCreate[];
+}
+
+export interface OrderUpdate {
+  order_type?: OrderType;
+  table_number?: string | null;
+  payment_status?: PaymentStatus;
+  items?: OrderItemCreate[];
 }
 
 export interface OrderStatusUpdate {

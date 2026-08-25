@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.auth import get_current_admin
 from app.core.database import get_db
 from app.models.enums import OrderStatus
-from app.schemas.order import OrderCreate, OrderStatusUpdate, OrderResponse
+from app.schemas.order import OrderCreate, OrderStatusUpdate, OrderUpdate, OrderResponse
 from app.services.order_service import OrderService
 
 router = APIRouter(prefix="/orders", tags=["Order Lifecycle & Kitchen Queue"])
@@ -19,6 +19,17 @@ async def create_order(
 ):
     service = OrderService(db)
     return await service.create_order(data=payload, current_admin=admin)
+
+
+@router.put("/{order_id}", response_model=OrderResponse)
+async def update_order(
+    order_id: int,
+    payload: OrderUpdate,
+    db: AsyncSession = Depends(get_db),
+    admin: str = Depends(get_current_admin),
+):
+    service = OrderService(db)
+    return await service.update_order(order_id=order_id, data=payload)
 
 
 @router.get("/active", response_model=List[OrderResponse])

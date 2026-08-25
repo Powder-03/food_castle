@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { Order } from '@/lib/types'
+import { Order, PaymentStatus } from '@/lib/types'
 import { OrderCard } from '@/components/kitchen/OrderCard'
+import { EditOrderModal } from '@/components/kitchen/EditOrderModal'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { ChefHat, RefreshCw } from 'lucide-react'
@@ -13,6 +14,7 @@ export const KitchenQueuePage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [updatingId, setUpdatingId] = useState<number | null>(null)
+  const [editingOrder, setEditingOrder] = useState<Order | null>(null)
 
   const outletContext = useOutletContext<{ setPendingCount?: (cnt: number) => void }>()
 
@@ -72,6 +74,41 @@ export const KitchenQueuePage: React.FC = () => {
     }
   }
 
+  const handleTogglePaymentStatus = async (orderId: number, nextStatus: PaymentStatus) => {
+    try {
+      setUpdatingId(orderId)
+      const res = await api.patch(`/api/v1/orders/${orderId}/status`, {
+        payment_status: nextStatus,
+      })
+      toast.success(`Order #${orderId} marked as ${nextStatus}!`)
+      setOrders((prev) => prev.map((o) => (o.id === orderId ? res.data : o)))
+    } catch (err: any) {
+      console.error(err)
+      toast.error(err.response?.data?.detail || 'Failed to update payment status.')
+    } finally {
+      setUpdatingId(null)
+    }
+  }
+
+  const handleSoftDelete = async (orderId: number) => {
+    if (!window.confirm(`Refund and soft-delete order #${orderId}?`)) return
+    try {
+      setUpdatingId(orderId)
+      await api.delete(`/api/v1/orders/${orderId}`)
+      toast.success(`Order #${orderId} refunded & soft-deleted!`)
+      fetchActiveOrders()
+    } catch (err: any) {
+      console.error(err)
+      toast.error(err.response?.data?.detail || 'Failed to refund order.')
+    } finally {
+      setUpdatingId(null)
+    }
+  }
+
+  const handleOrderUpdated = (updatedOrder: Order) => {
+    setOrders((prev) => prev.map((o) => (o.id === updatedOrder.id ? updatedOrder : o)))
+  }
+
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* Header */}
@@ -114,11 +151,22 @@ export const KitchenQueuePage: React.FC = () => {
               order={order}
               onComplete={handleComplete}
               onCancel={handleCancel}
+              onEdit={(o) => setEditingOrder(o)}
+              onTogglePaymentStatus={handleTogglePaymentStatus}
+              onSoftDelete={handleSoftDelete}
               isLoading={updatingId === order.id}
             />
           ))}
         </div>
       )}
+
+      {/* Edit Order Modal */}
+      <EditOrderModal
+        isOpen={!!editingOrder}
+        order={editingOrder}
+        onClose={() => setEditingOrder(null)}
+        onOrderUpdated={handleOrderUpdated}
+      />
     </div>
   )
 }

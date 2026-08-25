@@ -8,7 +8,7 @@ from app.models.enums import OrderStatus, PaymentStatus, PortionSize
 from app.models.order import Order, OrderItem
 from app.repositories.menu_repository import MenuRepository
 from app.repositories.order_repository import OrderRepository
-from app.schemas.order import OrderCreate, OrderStatusUpdate
+from app.schemas.order import OrderCreate, OrderStatusUpdate, OrderUpdate, OrderItemCreate
 
 
 class OrderService:
@@ -17,15 +17,15 @@ class OrderService:
         self.order_repo = OrderRepository(db)
         self.menu_repo = MenuRepository(db)
 
-    async def create_order(self, data: OrderCreate, current_admin: str) -> Order:
-        menu_item_ids = [item.menu_item_id for item in data.items]
+    async def _build_order_items(self, items_data: List[OrderItemCreate]):
+        menu_item_ids = [item.menu_item_id for item in items_data]
         fetched_items = await self.menu_repo.get_by_ids(menu_item_ids)
         db_menu_items = {m.id: m for m in fetched_items}
 
         order_items: List[OrderItem] = []
         calculated_total = Decimal("0.00")
 
-        for item_data in data.items:
+        for item_data in items_data:
             menu_item = db_menu_items.get(item_data.menu_item_id)
             if not menu_item:
                 raise HTTPException(
@@ -78,17 +78,53 @@ class OrderService:
             )
             order_items.append(order_item)
 
+        return order_items, calculated_total
+
+    async def create_order(self, data: OrderCreate, current_admin: str) -> Order:
+        order_items, calculated_total = await self._build_order_items(data.items)
+
         order = Order(
             order_type=data.order_type,
-            table_number=data.table_number,
+            table_number=data.table_number if data.order_type == OrderType.DINE_IN else None,
             total_amount=round(calculated_total, 2),
             status=OrderStatus.PENDING,
-            payment_status=PaymentStatus.UNPAID,
+            payment_status=data.payment_status or PaymentStatus.UNPAID,
             created_by_admin=current_admin,
             is_deleted=False,
         )
 
         return await self.order_repo.create_order_with_items(order, order_items)
+
+    async def update_order(self, order_id: int, data: OrderUpdate) -> Order:
+        order = await self.order_repo.get_order_by_id(order_id)
+        if not order:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Order with ID {order_id} not found."
+            )
+
+        if order.is_deleted or order.status == OrderStatus.CANCELLED:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot edit a cancelled or deleted order."
+            )
+
+        new_items = None
+        if data.items is not None:
+            new_items, calculated_total = await self._build_order_items(data.items)
+            order.total_amount = round(calculated_total, 2)
+
+        if data.order_type is not None:
+            order.order_type = data.order_type
+
+        if data.table_number is not None:
+            effective_order_type = data.order_type if data.order_type is not None else order.order_type
+            order.table_number = data.table_number if effective_order_type == OrderType.DINE_IN else None
+
+        if data.payment_status is not None:
+            order.payment_status = data.payment_status
+
+        return await self.order_repo.update_order_with_items(order, new_items)
 
     async def get_active_orders(self) -> List[Order]:
         return await self.order_repo.get_active_orders()
