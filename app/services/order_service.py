@@ -4,7 +4,7 @@ from typing import List, Optional
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.enums import OrderStatus, PaymentStatus, PortionSize
+from app.models.enums import OrderType, OrderStatus, PaymentStatus, PortionSize
 from app.models.order import Order, OrderItem
 from app.repositories.menu_repository import MenuRepository
 from app.repositories.order_repository import OrderRepository

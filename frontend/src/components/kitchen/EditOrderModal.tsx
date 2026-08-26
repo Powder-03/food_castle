@@ -180,8 +180,19 @@ export const EditOrderModal: React.FC<EditOrderModalProps> = ({
       onOrderUpdated(res.data)
       onClose()
     } catch (err: any) {
-      console.error(err)
-      toast.error(err.response?.data?.detail || 'Failed to update order.')
+      console.error('Order update error:', err)
+      const detail = err.response?.data?.detail
+      let errorMsg = 'Failed to update order.'
+      if (typeof detail === 'string') {
+        errorMsg = detail
+      } else if (Array.isArray(detail)) {
+        errorMsg = detail.map((d: any) => d.msg || JSON.stringify(d)).join(', ')
+      } else if (detail && typeof detail === 'object') {
+        errorMsg = detail.message || JSON.stringify(detail)
+      } else if (err.message) {
+        errorMsg = err.message
+      }
+      toast.error(errorMsg)
     } finally {
       setIsSubmitting(false)
     }
