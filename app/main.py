@@ -17,7 +17,7 @@ def run_migrations():
     """Run Alembic database migrations programmatically on app startup inside a separate thread."""
     def _upgrade():
         try:
-            logger.info("Running database migrations via Alembic...")
+            logger.info(f"Running database migrations via Alembic for host: {async_engine.url.host}...")
             alembic_cfg = Config("alembic.ini")
             
             # Check if we need to stamp the initial schema
