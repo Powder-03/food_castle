@@ -17,17 +17,15 @@ def run_migrations():
     """Run Alembic database migrations programmatically on app startup inside a separate thread."""
     def _upgrade():
         try:
-            logger.info(f"Running database migrations via Alembic for host: {async_engine.url.host}...")
+            print(f"INFO: Running database migrations via Alembic for host: {async_engine.url.host}...", flush=True)
             alembic_cfg = Config("alembic.ini")
             
-            # Check if we need to stamp the initial schema
-            # We do this by checking if Alembic says we are at 'base' but tables actually exist
+            # Use sync url for inspector to check existing revisions safely
             from alembic.migration import MigrationContext
             from sqlalchemy import create_engine
             from sqlalchemy.engine.reflection import Inspector
             from app.core.config import settings
             
-            # Use sync url for inspector
             sync_url = settings.DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://")
             engine = create_engine(sync_url)
             
@@ -35,19 +33,22 @@ def run_migrations():
                 context = MigrationContext.configure(connection)
                 current_rev = context.get_current_revision()
                 
-                # Check if tables exist
                 inspector = Inspector.from_engine(engine)
                 tables = inspector.get_table_names()
                 
                 if current_rev is None and "menu_items" in tables:
-                    logger.info("Tables exist but no alembic version found. Stamping initial schema...")
+                    print("INFO: Tables exist but no alembic version found. Stamping initial schema...", flush=True)
                     command.stamp(alembic_cfg, "001_initial_schema")
+            
+            engine.dispose()
             
             # Now run the upgrade
             command.upgrade(alembic_cfg, "head")
-            logger.info("Database migrations completed successfully.")
+            print("INFO: Database migrations completed successfully.", flush=True)
         except Exception as e:
-            logger.error(f"Error running database migrations: {e}", exc_info=True)
+            print(f"ERROR running database migrations: {e}", flush=True)
+            import traceback
+            traceback.print_exc()
 
     thread = threading.Thread(target=_upgrade)
     thread.start()
@@ -60,13 +61,18 @@ async def lifespan(app: FastAPI):
     # Programmatically run Alembic migrations on startup
     run_migrations()
     
-    # Ensure database schema fallback if using direct tables
+    # Test async database connectivity
     try:
-        async with async_engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
+        async with async_engine.connect() as conn:
+            from sqlalchemy import text
+            await conn.execute(text("SELECT 1"))
+            print("INFO: Async database connection verified successfully.", flush=True)
     except Exception as e:
-        logger.error(f"Error during Base.metadata.create_all: {e}", exc_info=True)
+        print(f"ERROR connecting to database asynchronously: {e}", flush=True)
+        import traceback
+        traceback.print_exc()
         raise e
+        
     yield
     await async_engine.dispose()
 
