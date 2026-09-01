@@ -47,7 +47,7 @@ def run_migrations():
             command.upgrade(alembic_cfg, "head")
             logger.info("Database migrations completed successfully.")
         except Exception as e:
-            logger.error(f"Error running database migrations: {e}")
+            logger.error(f"Error running database migrations: {e}", exc_info=True)
 
     thread = threading.Thread(target=_upgrade)
     thread.start()
@@ -61,9 +61,14 @@ async def lifespan(app: FastAPI):
     run_migrations()
     
     # Ensure database schema fallback if using direct tables
-    async with async_engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    try:
+        async with async_engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+    except Exception as e:
+        logger.error(f"Error during Base.metadata.create_all: {e}", exc_info=True)
+        raise e
     yield
+    await async_engine.dispose()
 
 
 app = FastAPI(

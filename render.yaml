@@ -14,11 +14,4 @@ services:
       - key: ADMIN_2_PASSWORD
         sync: false
       - key: DATABASE_URL
-        fromDatabase:
-          name: food-castle-db
-          property: connectionString
-
-databases:
-  - name: food-castle-db
-    databaseName: food_castle
-    user: food_castle_user
+        sync: false

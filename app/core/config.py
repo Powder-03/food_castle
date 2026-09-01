@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     @classmethod
     def normalize_database_url(cls, v: str) -> str:
         if v:
+            v = v.strip()
+            v = v.replace("&channel_binding=require", "").replace("?channel_binding=require&", "?").replace("?channel_binding=require", "")
             if v.startswith("postgres://"):
                 return v.replace("postgres://", "postgresql+asyncpg://", 1)
             elif v.startswith("postgresql://") and not v.startswith("postgresql+"):
