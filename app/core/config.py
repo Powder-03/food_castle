@@ -15,7 +15,10 @@ class Settings(BaseSettings):
     def normalize_database_url(cls, v: str) -> str:
         if v:
             v = v.strip()
+            # Remove libpq-only parameters not recognized by asyncpg
             v = v.replace("&channel_binding=require", "").replace("?channel_binding=require&", "?").replace("?channel_binding=require", "")
+            # asyncpg uses 'ssl=' instead of 'sslmode='
+            v = v.replace("sslmode=", "ssl=")
             if v.startswith("postgres://"):
                 return v.replace("postgres://", "postgresql+asyncpg://", 1)
             elif v.startswith("postgresql://") and not v.startswith("postgresql+"):
